@@ -1,15 +1,16 @@
 <template>
   <div id="app">
     <transition :name="transitionName">
-      <keep-alive v-if="$route.meta.keepAlive">
-        <router-view class="router"></router-view>
-      </keep-alive>
-      <router-view class="router" v-else></router-view>
+      <!-- <vue-page-stack> -->
+        <!-- <keep-alive v-if="$route.meta.keepAlive"> -->
+          <router-view :key="$route.fullPath" class="router"></router-view>
+        <!-- </keep-alive> -->
+      <!-- </vue-page-stack> -->
     </transition>
   </div>
 </template>
 <script>
-import defaultSetting from './settings'
+// import defaultSetting from './settings'
 import { mapGetters, mapActions } from 'vuex'
 import { getToken as customerServiceToken } from '@/utils/auth'
 import { getToken as userToken } from '@/utils/UserAuth'
@@ -17,20 +18,22 @@ import { getToken as userToken } from '@/utils/UserAuth'
 export default {
   name: 'app',
   computed: {
-    ...mapGetters(['isConnected', 'isReconnected', 'sessionId']),
-    transitionName () {
-      if (defaultSetting.needPageTrans) {
-        return this.$store.state.direction
-      }
-      return ''
-    }
+    ...mapGetters(['isConnected', 'isReconnected', 'sessionId'])
   },
   data: function () {
     return {
-      socketTimer: null
+      socketTimer: null,
+      transitionName: 'forward'
     }
   },
   watch: {
+    $route (to, from) {
+      if (to.params['stack-key-dir'] === 'forward') {
+        this.transitionName = 'forward'
+      } else {
+        this.transitionName = 'back'
+      }
+    },
     'isConnected' (newVal, oldVal) {
       if (newVal === false && this.socketTimer) {
         console.log('停止心跳')

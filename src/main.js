@@ -4,13 +4,15 @@ import App from './App.vue'
 import router from '@/router'
 import store from '@/store'
 import FastClick from 'fastclick'
-import 'utils/permission'
 import SvgIcon from 'components/SvgIcon'
+import defaultSettings from '@/settings'
+import VuePageStack from 'vue-page-stack'
+import 'utils/permission'
 import '@/icons' // icon
 import '@/style/common.scss'
 import { Lazyload, Toast } from 'vant'
 
-import defaultSettings from '@/settings'
+Vue.use(VuePageStack, { router })
 
 /**
  * If you don't want to use mock-server
