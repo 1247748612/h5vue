@@ -1,12 +1,13 @@
 <template>
   <div>
     <div class="header">
-      <div class="logo">
+      <div class="title">客服登录</div>
+      <!-- <div class="logo">
         <img src="http://img.cixi518.com/ljh_logo.jpeg" alt="default_logo">
-      </div>
+      </div> -->
     </div>
     <div class="content">
-      <van-field placeholder="手机号码" v-model="phoneNumber" left-icon="phone-o" :error-message="phoneNumberError" />
+      <van-field placeholder="账号名" v-model="name" left-icon="phone-o" :error-message="nameError" />
       <!-- eye -->
       <van-field v-if="loginWay==='password'" placeholder="登录密码" v-model="password" left-icon="lock" :type="passwordType">
          <van-icon slot="right-icon" @click="switchPasswordType" :name="passwordIcon"/>
@@ -17,34 +18,38 @@
       <div class="button-wrap">
         <van-button size="large" @click="handleLogin" type="info">登录</van-button>
       </div>
-      <div class="more-wrap">
+      <!-- <div class="more-wrap">
         <router-link class="link" to="/register">没有账号？去注册</router-link>
         <div class="switch-way" @click="switchLoginWay">{{loginWayObj.toggleMsg}}</div>
-      </div>
+      </div> -->
     </div>
   </div>
 </template>
 <script>
 import { Field, Icon, Button } from 'vant'
-import { mapActions } from 'vuex'
 import VerifyCodeBtn from '@/components/VerifyCodeBtn'
+import { mapActions } from 'vuex'
+
 export default {
   name: 'Login',
   data () {
     return {
-      phoneNumber: '13216698987',
-      password: '123456',
+      name: '',
+      password: '',
       code: '',
       loginWay: 'password',
       passwordType: 'password',
-      phoneNumberError: ''
+      nameError: ''
     }
   },
   methods: {
+    ...mapActions('CustomerService', [
+      'login' // 登录
+    ]),
     sendVerifyCode () {
-      this.phoneNumberError = ''
-      if (!this.phoneNumber) { // 根据需求做判断
-        this.phoneNumberError = '手机号码必填'
+      this.nameError = ''
+      if (!this.name) { // 根据需求做判断
+        this.nameError = '手机号码必填'
       }
     },
     switchPasswordType () {
@@ -56,16 +61,19 @@ export default {
     },
     handleLogin () {
       const data = {
-        phoneNumber: this.phoneNumber,
-        password: this.password,
-        $router: this.$router,
-        $route: this.$route
+        name: this.name,
+        password: this.password
       }
-      this.login(data)
-    },
-    ...mapActions({
-      login: 'user/login'
-    })
+      this.sendVerifyCode()
+      this.login(data).then((res) => {
+        setTimeout(() => {
+          const redirect = '/AllContact'
+          this.$router.replace({
+            path: redirect
+          })
+        }, 1500)
+      })
+    }
   },
   computed: {
     loginWayObj: function () {
@@ -89,6 +97,8 @@ export default {
     [Icon.name]: Icon,
     [Button.name]: Button,
     VerifyCodeBtn
+  },
+  created () {
   }
 }
 </script>
@@ -99,6 +109,10 @@ export default {
     display: flex;
     justify-content: center;
     align-items: center;
+    .title {
+      font-size: 18px;
+      font-weight: bold;
+    }
     .logo{
       width: 60px;
       height: 60px;

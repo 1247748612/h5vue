@@ -1,6 +1,6 @@
 module.exports = {
 
-  title: 'H5Vue',
+  title: '在线客服',
 
   /**
    * @type {boolean} true | false

@@ -1,87 +1,86 @@
-import { login, getInfo } from 'api/user'
+import { currentUser, userLogin } from 'api/system'
+import { removeToken, setToken, getToken } from '@/utils/UserAuth'
+import { MyWebsocket } from '@/utils/websocket'
 import { Toast } from 'vant'
-import { getToken, setToken, removeToken } from '@/utils/auth'
-import { resetRouter } from '@/router'
-// import router from '@/router'
-
-const LOGIN = 'LOGIN'// 获取用户信息
-const SetUserData = 'SetUserData'// 获取用户信息
-const LOGOUT = 'LOGOUT'// 退出登录、清除用户数据
-const USER_DATA = 'userDate'// 用户数据
 
 export default {
   namespaced: true,
   state: {
-    token: getToken() || '',
-    user: JSON.parse(localStorage.getItem(USER_DATA) || null)
+    userInfo: null,
+    toast: null
+  },
+  getters: {
+    toast: (state) => state.toast
   },
   mutations: {
-
-    [LOGIN] (state, data) {
-      let userToken = data.data
-      state.token = userToken
-      setToken(userToken)
+    'SET_USER_INFO' (state, info) {
+      state.userInfo = info
     },
-
-    [SetUserData] (state, userData = {}) {
-      state.user = userData
-      localStorage.setItem(USER_DATA, JSON.stringify(userData))
+    'LOGOUT' (state, info) {
+      state.userInfo = null
     },
-    [LOGOUT] (state) {
-      state.user = null
-      state.token = null
-      removeToken()
-      localStorage.removeItem(USER_DATA)
-      resetRouter()
+    'SET_TOAST_STATE' (state, toast) {
+      state.toast = toast
     }
-
   },
   actions: {
-    async login (state, data) {
-      try {
-        let res = await login({
-          phoneNumber: data.phoneNumber,
-          password: data.password
-        })
-        state.commit(LOGIN, res)
-        Toast({
-          message: '登录成功',
-          position: 'middle',
-          duration: 1500
-        })
-        setTimeout(() => {
-          const redirect = data.$route.query.redirect || '/'
-          data.$router.replace({
-            path: redirect
-          })
-        }, 1500)
-      } catch (error) {
-      }
-    },
-    // get user info
-    getInfo ({ commit, state }) {
+    getInfo ({ commit }) {
       return new Promise((resolve, reject) => {
-        getInfo(state.token).then(response => {
-          const { data } = response
-
+        // 有token时获取个人信息
+        currentUser().then((res) => {
+          const { data } = res
           if (!data) {
             // eslint-disable-next-line
             reject('Verification failed, please Login again.')
           }
-          commit(SetUserData, data)
+          MyWebsocket(getToken())
+          commit('SET_USER_INFO', data)
           resolve(data)
-        }).catch(error => {
-          reject(error)
+        }).catch((err) => {
+          reject(err)
         })
       })
-    }
-  },
-  getters: {
-    token (state) {
-      return state.token
     },
-    user (state) {
-      return state.user
+    logout ({ commit }) {
+      commit('LOGOUT')
+      removeToken()
+      setTimeout(() => {
+        location.reload()
+      }, 1500)
+    },
+    login ({ commit, getters }) {
+      return new Promise((resolve, reject) => {
+        userLogin().then((res) => {
+          console.log('登录成功')
+          console.log(res)
+          if (res.data) {
+            setToken(res.data.sessionId)
+            MyWebsocket(res.data.sessionId)
+            commit('SET_USER_INFO', res.data)
+          }
+          Toast({
+            message: res.msg,
+            position: 'middle',
+            duration: 1500
+          })
+          if (getters.toast) {
+            commit('SET_TOAST_STATE', false)
+          }
+          resolve(res.data)
+        }).catch((err) => {
+          if (!getters.toast && err.msg) {
+            const toast = Toast.loading({
+              duration: 0, // 持续展示 toast
+              forbidClick: true,
+              message: err.msg,
+              overlay: true
+            })
+            commit('SET_TOAST_STATE', toast)
+          }
+          reject(err)
+          console.log(err, 'err')
+        })
+      })
     }
   }
 }

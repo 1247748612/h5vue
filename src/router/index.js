@@ -10,6 +10,7 @@ let routes = [
     path: '/',
     name: 'home',
     component: Home,
+    redirect: '/ContactCustomerService',
     meta: {
       title: '首页',
       keepAlive: true
@@ -45,7 +46,7 @@ routes = routes.concat({
 })
 
 const createRouter = () => new Router({
-  mode: 'history', // require service support
+  // mode: 'history', // require service support
   base: process.env.BASE_URL,
   scrollBehavior: () => ({ y: 0 }),
   routes
@@ -65,6 +66,9 @@ let historyCount = history.getItem('count') * 1 || 0
 history.setItem('/', 0)
 
 myRouter.beforeEach((to, from, next) => {
+  // if (to.name === from.name) {  //   location.reload()
+  //   return
+  // }
   if (to.params.direction) {
     store.commit('updateDirection', to.params.direction)
   } else {
@@ -88,7 +92,7 @@ myRouter.beforeEach((to, from, next) => {
 })
 
 export function resetRouter () {
-  myRouter.replace('/login')
+  myRouter.replace('/HelperLogin')
 }
 
 export default myRouter

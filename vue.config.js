@@ -4,7 +4,7 @@ const UglifyjsWebpackPlugin = require('uglifyjs-webpack-plugin')
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
 const port = process.env.port || process.env.npm_config_port || 8888
 const cdnDomian = './' // cdn域名，如果有cdn修改成对应的cdn
-const name = 'H5Vue' // page title
+const name = '在线客服' // page title
 const IS_PRODUCTION = process.env.NODE_ENV === 'production'
 const cdn = {
   css: [],
@@ -46,14 +46,21 @@ module.exports = {
       // change xxx-api/login => mock/login
       // detail: https://cli.vuejs.org/config/#devserver-proxy
       [process.env.VUE_APP_BASE_API]: {
-        target: `http://127.0.0.1:${port}/mock`,
+        target: 'http://192.168.0.224:9998',
         changeOrigin: true,
         pathRewrite: {
           ['^' + process.env.VUE_APP_BASE_API]: ''
         }
+      },
+      [process.env.VUE_APP_WEBSCOKET_API]: {
+        target: 'ws://192.168.0.224:9998/websocket',
+        changeOrigin: true,
+        pathRewrite: {
+          ['^' + process.env.VUE_APP_WEBSCOKET_API]: ''
+        }
       }
-    },
-    after: require('./mock/mock-server.js')
+    }
+    // after: require('./mock/mock-server.js')
   },
   configureWebpack: {
     // provide the app's title in webpack's name field, so that
